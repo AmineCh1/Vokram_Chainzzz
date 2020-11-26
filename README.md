@@ -1,2 +1,1 @@
-# Vokram_Chainzzz
-Markov Chains project repository
+# markov-chains-COM-516
