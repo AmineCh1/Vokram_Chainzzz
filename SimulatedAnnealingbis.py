@@ -30,8 +30,11 @@ class Solution(object):
         self._objective_v: float = 0
         self.update()
 
-    def update(self) -> None:
 
+    def update(self) -> None:
+        """
+        compute the new smallest circle enclosing all cities of the solution
+        """
         self._radius = self.index_distance(self._c_i, self._c_j) / 2
         self._center = self.index_mean(self._c_i, self._c_j)
 
@@ -47,8 +50,11 @@ class Solution(object):
                     self._assignments[j] = not self._assignments[j]
                     self._objective_v += self._dataset.v[j]
 
-    def move(self, move: int) -> None:
 
+    def move(self, move: int) -> None:
+        """
+        add new city to solution and make it one of the edge of the circle
+        """
         point_to_replace = np.random.choice((self._c_i, self._c_j))
 
         if point_to_replace == self._c_i:
@@ -72,7 +78,7 @@ class Solution(object):
         return self._objective_v - self._lmbd * self._dataset.N * np.pi * np.power(self._radius, 2)
 
     def plot(self) -> None:
-        a = sns.relplot(self._dataset.x[:, 0], self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
+        a = sns.relplot(x=self._dataset.x[:, 0], y=self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
         if self._center is not None:
             a.ax.add_artist(plt.Circle(tuple(self._center), self._radius, color='black', fill=False))
             a.ax.add_artist(
@@ -126,12 +132,12 @@ class SimulatedAnnealing(object):
         return np.log(self._p) / (sum_obj / count - self.S.get_objective())
 
     def cool_down(self, iters: int) -> None:  # TODO
-        for i in tqdm(range(iters)):
+        for _ in tqdm(range(iters)):
             old_objective = self.S.get_objective()
             move = np.random.randint(self._dataset.N)
             s_prime = copy.deepcopy(self.S)
             s_prime.move(move)
-            if np.random.random() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
+            if np.random.rand() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
                 self.S = s_prime
             self.objectives.append(self.S.get_objective())
         self.S.plot()
