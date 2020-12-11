@@ -1,22 +1,8 @@
 import typing
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
-
-def distance(x: np.ndarray, y: np.ndarray) -> float:
-    """
-    return the euclidean distance between cities at positions x and y
-    """
-    return np.linalg.norm(x - y)
-
-
-def mean(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """
-    return the mean euclidean distance between cities at position x and y
-    """
-    return np.array([(x[0] + y[0]) / 2, (x[1] + y[1]) / 2])
+from helpers import *
 
 
 class Solution(object):
@@ -151,7 +137,8 @@ class SimulatedAnnealing(object):
         self.S = self._initial_solution()
         self.S.plot()
 
-        #probability of accepting a move of Metropolis-Hastings algorithm
+        #?????????????????????????????????????????????????????????????????
+        #initial acceptance probability of the Metropolis-Hastings algorithm ?
         self._p = p
 
         #array of values taken by the objective function 

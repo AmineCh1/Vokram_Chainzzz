@@ -1,21 +1,10 @@
 import typing
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import scipy.spatial.distance as dist
 import copy
-
-
-
-def distance(x: np.ndarray, y: np.ndarray) -> float:
-    return np.linalg.norm(x - y)
-
-
-def mean(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    # print(x)
-    # print(y)
-    return np.array([(x[0] + y[0]) / 2, (x[1] + y[1]) / 2])
+from helpers import *
 
 
 class Solution(object):
@@ -91,9 +80,12 @@ class Solution(object):
     def index_distance(self, i: int, j: int) -> float:
         return distance(self._dataset.x[i], self._dataset.x[j])
 
+    #return the matrix of distances between all cities (unused)
+    """
     def index_assigned_distances(self, assigned):
         assigned_points = self._dataset.x[assigned]
         return dist.pdist(assigned_points)
+    """
 
     def index_mean(self, i: int, j: int) -> np.ndarray:
         return mean(self._dataset.x[i], self._dataset.x[j])
