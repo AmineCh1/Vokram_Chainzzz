@@ -139,7 +139,6 @@ class SimulatedAnnealing(object):
         if count == 0:
             return self._beta / self._alpha
         mean_ = sum_obj / count
-        # p: Probability with beta to choose the average worsening solution
         self.betas.append(np.log(p) / (mean_ - old_obj))
         return np.max((self._beta / self._alpha, np.log(p) / (mean_ - old_obj)))
 
