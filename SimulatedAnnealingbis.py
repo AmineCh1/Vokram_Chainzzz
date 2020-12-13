@@ -64,6 +64,12 @@ class Solution(object):
     def get_objective(self) -> float:
         return self._objective_v - self._lmbd * self._dataset.N * np.pi * np.power(self._radius, 2)
 
+    def get_profit(self) -> float:
+        return self._objective_v
+
+    def get_cost(self) -> float:
+        return self._dataset.N * np.pi * np.power(self._radius, 2)
+
     def plot(self) -> None:
         a = sns.relplot(x=self._dataset.x[:, 0], y=self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
         if self._center is not None:
