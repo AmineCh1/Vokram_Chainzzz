@@ -7,7 +7,6 @@ import scipy.spatial.distance as dist
 import copy
 
 
-
 def distance(x: np.ndarray, y: np.ndarray) -> float:
     return np.linalg.norm(x - y)
 
@@ -39,7 +38,7 @@ class Solution(object):
             dist_ = distance(self._dataset.x[j], self._center)
 
             if self._assignments[j]:
-                if dist_ > self._radius:
+                if dist_ > self._radius and j != self._c_i and j != self._c_j:
                     self._assignments[j] = not self._assignments[j]
                     self._objective_v -= self._dataset.v[j]
             else:
@@ -47,9 +46,16 @@ class Solution(object):
                     self._assignments[j] = not self._assignments[j]
                     self._objective_v += self._dataset.v[j]
 
-    def move(self, move: int) -> None:
+    def move(self, move: int, select_point: typing.Optional[int] = None) -> None:
 
-        point_to_replace = np.random.choice((self._c_i, self._c_j))
+        point_to_replace = None
+
+        if select_point is None:
+            point_to_replace = np.random.choice((self._c_i, self._c_j))
+        elif select_point == 0:
+            point_to_replace = self._c_i
+        elif select_point == 1:
+            point_to_replace = self._c_j
 
         if point_to_replace == self._c_i:
             self._c_i = move
@@ -65,8 +71,6 @@ class Solution(object):
 
         else:
             self.update()
-
-
 
     def get_objective(self) -> float:
         return self._objective_v - self._lmbd * self._dataset.N * np.pi * np.power(self._radius, 2)
@@ -94,15 +98,18 @@ class Solution(object):
 
 
 class SimulatedAnnealing(object):
-    def __init__(self, lmbd: float, dataset, p: float):
+    def __init__(self, lmbd: float, dataset, alpha: float = 0.5):
         self._lmbd = lmbd
         self._dataset = dataset
-        self._p = p
+        # self._p = p
         self.S = self._initial_solution()
         self.S.plot()
         self.objectives = [self.S.get_objective()]
-        self._beta = self._heat_up()
-        print(self._beta)
+        self._beta = 0
+        self.betas = []
+        self._best_obj = self.S.get_objective()
+        self._alpha = alpha
+        # print(self._beta)
 
     def _initial_solution(self) -> Solution:
         initial_solution: Solution = Solution(self._lmbd, self._dataset)
@@ -111,21 +118,41 @@ class SimulatedAnnealing(object):
             initial_solution.move(i)
         return initial_solution
 
-    def _heat_up(self) -> float:
-        old_obj = self.S.get_objective()
+    def heat_cool_cycles(self, iters: int, cycles: int):
+
+        p_range = np.linspace(0, 1, cycles + 2)
+
+        for i in range(cycles):
+            print("Heat up cycle %d " % (i + 1))
+            self._beta = self._heat_up(p_range[cycles - i])
+            print("Current p %f" % p_range[cycles - i])
+            print("Beta : %f " % self._beta)
+            print("Objective init %f " % self.S.get_objective())
+            self.cool_down(iters)
+            print("Objective final %f " % self.S.get_objective())
+
+    def _heat_up(self, p: float) -> float:
+        old_obj = self._best_obj
         sum_obj = 0
         count = 0
         for i in range(self._dataset.N):
             # TODO
-            s_prime = copy.deepcopy(self.S)
-            s_prime.move(i)
-            new_obj = s_prime.get_objective()
-            if new_obj < old_obj:
-                sum_obj += new_obj
-                count += 1
-        return np.log(self._p) / (sum_obj / count - self.S.get_objective())
+            for elem in [0, 1]:
+                s_prime = copy.deepcopy(self.S)
+                s_prime.move(i, elem)
+                new_obj = s_prime.get_objective()
+                if new_obj < old_obj:
+                    sum_obj += new_obj
+                    count += 1
+        if count == 0:
+            return self._beta / self._alpha
+        mean_ = sum_obj / count
+        # p: Probability with beta to choose the average worsening solution
+        self.betas.append(np.log(p) / (mean_ - old_obj))
+        return np.max((self._beta / self._alpha, np.log(p) / (mean_ - old_obj)))
 
     def cool_down(self, iters: int) -> None:  # TODO
+
         for i in tqdm(range(iters)):
             old_objective = self.S.get_objective()
             move = np.random.randint(self._dataset.N)
@@ -133,5 +160,12 @@ class SimulatedAnnealing(object):
             s_prime.move(move)
             if np.random.random() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
                 self.S = s_prime
+                current_objective = self.S.get_objective()
+                if current_objective > self._best_obj:
+                    self._best_obj = current_objective
             self.objectives.append(self.S.get_objective())
         self.S.plot()
+
+    def plot_betas(self) -> None:
+        plt.plot(range(len(self.betas)), self.betas)
+        plt.show()
