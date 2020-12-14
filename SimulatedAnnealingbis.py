@@ -1,10 +1,11 @@
 import typing
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import scipy.spatial.distance as dist
 import copy
-from helpers import *
+import helpers
 
 
 class Solution(object):
@@ -19,16 +20,13 @@ class Solution(object):
         self._objective_v: float = 0
         self.update()
 
-
     def update(self) -> None:
-        """
-        compute the new smallest circle enclosing all cities of the solution
-        """
+
         self._radius = self.index_distance(self._c_i, self._c_j) / 2
         self._center = self.index_mean(self._c_i, self._c_j)
 
         for j in range(self._dataset.N):
-            dist_ = distance(self._dataset.x[j], self._center)
+            dist_ = helpers.distance(self._dataset.x[j], self._center)
 
             if self._assignments[j]:
                 if dist_ > self._radius and j != self._c_i and j != self._c_j:
@@ -39,12 +37,16 @@ class Solution(object):
                     self._assignments[j] = not self._assignments[j]
                     self._objective_v += self._dataset.v[j]
 
+    def move(self, move: int, select_point: typing.Optional[int] = None) -> None:
 
-    def move(self, move: int) -> None:
-        """
-        add new city to solution and make it one of the edge of the circle
-        """
-        point_to_replace = np.random.choice((self._c_i, self._c_j))
+        point_to_replace = None
+
+        if select_point is None:
+            point_to_replace = np.random.choice((self._c_i, self._c_j))
+        elif select_point == 0:
+            point_to_replace = self._c_i
+        elif select_point == 1:
+            point_to_replace = self._c_j
 
         if point_to_replace == self._c_i:
             self._c_i = move
@@ -64,14 +66,8 @@ class Solution(object):
     def get_objective(self) -> float:
         return self._objective_v - self._lmbd * self._dataset.N * np.pi * np.power(self._radius, 2)
 
-    def get_profit(self) -> float:
-        return self._objective_v
-
-    def get_cost(self) -> float:
-        return self._dataset.N * np.pi * np.power(self._radius, 2)
-
     def plot(self) -> None:
-        a = sns.relplot(x=self._dataset.x[:, 0], y=self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
+        a = sns.relplot(self._dataset.x[:, 0], self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
         if self._center is not None:
             a.ax.add_artist(plt.Circle(tuple(self._center), self._radius, color='black', fill=False))
             a.ax.add_artist(
@@ -82,17 +78,14 @@ class Solution(object):
         plt.show()
 
     def index_distance(self, i: int, j: int) -> float:
-        return distance(self._dataset.x[i], self._dataset.x[j])
+        return helpers.distance(self._dataset.x[i], self._dataset.x[j])
 
-    #return the matrix of distances between all cities (unused)
-    """
     def index_assigned_distances(self, assigned):
         assigned_points = self._dataset.x[assigned]
         return dist.pdist(assigned_points)
-    """
 
     def index_mean(self, i: int, j: int) -> np.ndarray:
-        return mean(self._dataset.x[i], self._dataset.x[j])
+        return helpers.mean(self._dataset.x[i], self._dataset.x[j])
 
 
 class SimulatedAnnealing(object):
@@ -145,16 +138,18 @@ class SimulatedAnnealing(object):
         if count == 0:
             return self._beta / self._alpha
         mean_ = sum_obj / count
+        # p: Probability with beta to choose the average worsening solution
         self.betas.append(np.log(p) / (mean_ - old_obj))
         return np.max((self._beta / self._alpha, np.log(p) / (mean_ - old_obj)))
 
     def cool_down(self, iters: int) -> None:  # TODO
-        for _ in tqdm(range(iters)):
+
+        for i in tqdm(range(iters)):
             old_objective = self.S.get_objective()
             move = np.random.randint(self._dataset.N)
             s_prime = copy.deepcopy(self.S)
             s_prime.move(move)
-            if np.random.rand() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
+            if np.random.random() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
                 self.S = s_prime
                 current_objective = self.S.get_objective()
                 if current_objective > self._best_obj:
