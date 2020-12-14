@@ -21,7 +21,9 @@ class Solution(object):
         self.update()
 
     def update(self) -> None:
-
+        """
+        compute the new smallest circle enclosing all cities of the solution
+        """
         self._radius = self.index_distance(self._c_i, self._c_j) / 2
         self._center = self.index_mean(self._c_i, self._c_j)
 
@@ -38,7 +40,9 @@ class Solution(object):
                     self._objective_v += self._dataset.v[j]
 
     def move(self, move: int, select_point: typing.Optional[int] = None) -> None:
-
+        """
+        add new city to solution and make it one of the edge of the circle
+        """
         point_to_replace = None
 
         if select_point is None:
@@ -65,15 +69,21 @@ class Solution(object):
 
     def get_objective(self) -> float:
         return self._objective_v - self._lmbd * self._dataset.N * np.pi * np. power(self._radius, 2)
-  
+
     def get_profit(self) -> float:
+        """
+        return the sum of normalized population of the cities chosen in the current solution
+        """
         return self._objective_v
 
     def get_cost(self) -> float:
+        """
+        return the cost of the current solution
+        """
         return self._dataset.N * np.pi * np.power(self._radius, 2)
 
     def plot(self) -> None:
-        a = sns.relplot(self._dataset.x[:, 0], self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
+        a = sns.relplot(x=self._dataset.x[:, 0], y=self._dataset.x[:, 1], hue=self._assignments, size=self._dataset.v)
         if self._center is not None:
             a.ax.add_artist(plt.Circle(tuple(self._center), self._radius, color='black', fill=False))
             a.ax.add_artist(
@@ -86,12 +96,15 @@ class Solution(object):
     def index_distance(self, i: int, j: int) -> float:
         return helpers.distance(self._dataset.x[i], self._dataset.x[j])
 
+    def index_mean(self, i: int, j: int) -> np.ndarray:
+        return helpers.mean(self._dataset.x[i], self._dataset.x[j])
+
+    #return the matrix of distances between all cities (unused)
+    """
     def index_assigned_distances(self, assigned):
         assigned_points = self._dataset.x[assigned]
         return dist.pdist(assigned_points)
-
-    def index_mean(self, i: int, j: int) -> np.ndarray:
-        return helpers.mean(self._dataset.x[i], self._dataset.x[j])
+    """
 
 
 class SimulatedAnnealing(object):
@@ -116,9 +129,10 @@ class SimulatedAnnealing(object):
         return initial_solution
 
     def heat_cool_cycles(self, iters: int, cycles: int):
-
+        """
+        compute the heat up and the cool down process for each new cycle 
+        """
         p_range = np.linspace(0, 1, cycles + 2)
-
         for i in range(cycles):
             print("Heat up cycle %d " % (i + 1))
             self._beta = self._heat_up(p_range[cycles - i])
@@ -144,18 +158,16 @@ class SimulatedAnnealing(object):
         if count == 0:
             return self._beta / self._alpha
         mean_ = sum_obj / count
-        # p: Probability with beta to choose the average worsening solution
         self.betas.append(np.log(p) / (mean_ - old_obj))
         return np.max((self._beta / self._alpha, np.log(p) / (mean_ - old_obj)))
 
     def cool_down(self, iters: int) -> None:  # TODO
-
-        for i in tqdm(range(iters)):
+        for _ in tqdm(range(iters)):
             old_objective = self.S.get_objective()
             move = np.random.randint(self._dataset.N)
             s_prime = copy.deepcopy(self.S)
             s_prime.move(move)
-            if np.random.random() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
+            if np.random.rand() <= np.exp(self._beta * (s_prime.get_objective() - old_objective)):
                 self.S = s_prime
                 current_objective = self.S.get_objective()
                 if current_objective > self._best_obj:
@@ -164,6 +176,9 @@ class SimulatedAnnealing(object):
         self.S.plot()
 
     def plot_betas(self) -> None:
+        """
+        plot the values of beta obtained at each cycle
+        """
         plt.plot(range(len(self.betas)), self.betas)
         plt.show
         
