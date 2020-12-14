@@ -107,7 +107,7 @@ class SimulatedAnnealing(object):
         self._order = order
         # self._p = p
         self.S = self._initial_solution()
-        self.S.plot()
+        # self.S.plot()
         self.objectives = [self.S.get_objective()]
         self._beta = 0
         self.betas = []
@@ -152,7 +152,7 @@ class SimulatedAnnealing(object):
         self.betas.append(np.log(p) / (mean_ - old_obj))
         return np.max((self._beta / self._alpha, np.log(p) / (mean_ - old_obj)))
 
-    def cool_down(self, iters: int) -> None:  # TODO
+    def cool_down(self, iters: int, logging: bool = False) -> None:  # TODO
 
         for i in tqdm(range(iters)):
             old_objective = self.S.get_objective()
@@ -164,7 +164,8 @@ class SimulatedAnnealing(object):
                 if current_objective > self._best_obj:
                     self._best_obj = current_objective
             self.objectives.append(self.S.get_objective())
-        self.S.plot()
+        if logging:
+            self.S.plot()
 
     def plot_betas(self) -> None:
         plt.plot(range(len(self.betas)), self.betas)

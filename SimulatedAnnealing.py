@@ -135,7 +135,7 @@ class SimulatedAnnealing(object):
 
         #current solution of the simulated annealing algorithm
         self.S = self._initial_solution()
-        self.S.plot()
+        # self.S.plot()
 
         #probability with beta to choose the average worsening solution
 
@@ -187,7 +187,7 @@ class SimulatedAnnealing(object):
             self.cool_down(iters)
             print("Objective final %f " % self.S.get_objective())
 
-    def cool_down(self, iters: int) -> None:  # TODO
+    def cool_down(self, iters: int, logging: bool = False) -> None:  # TODO
         """
         cool down phase of simulated annealing
         """
@@ -198,4 +198,5 @@ class SimulatedAnnealing(object):
             if np.random.rand() > np.exp(self._beta * (self.S.get_objective() - old_objective)):
                 self.S.incremental_objective_function(move)
             self.objectives.append(self.S.get_objective())
-        self.S.plot()
+        if logging:
+            self.S.plot()
