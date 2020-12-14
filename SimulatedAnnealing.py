@@ -129,7 +129,7 @@ class SimulatedAnnealing(object):
     """
     represent the simulated annealing algorithm to find a global minimum of the objective function
     """
-    def __init__(self, lmbd: float, dataset, p: float):
+    def __init__(self, lmbd: float, dataset):
         self._lmbd = lmbd
         self._dataset = dataset
 
@@ -138,14 +138,14 @@ class SimulatedAnnealing(object):
         self.S.plot()
 
         #probability with beta to choose the average worsening solution
-        self._p = p
+
 
         #array of values taken by the objective function 
         self.objectives = [self.S.get_objective()]
 
         #beta parameter of the Metropolis-Hastings algorithm
-        self._beta = self._heat_up()
-        print(self._beta)
+        self._beta = 0
+
 
     def _initial_solution(self) -> Solution:
         """
@@ -157,7 +157,7 @@ class SimulatedAnnealing(object):
             initial_solution.incremental_objective_function(i)
         return initial_solution
 
-    def _heat_up(self) -> float:
+    def _heat_up(self, p: float) -> float:
         """
         heat up phase of simulated annealing
         """
@@ -172,7 +172,20 @@ class SimulatedAnnealing(object):
                 sum_obj += new_obj
                 count += 1
             self.S.incremental_objective_function(i)
-        return np.log(self._p) / (sum_obj / count - self.S.get_objective())
+        return np.log(p) / (sum_obj / count - self.S.get_objective())
+
+    def heat_cool_cycles(self, iters: int, cycles: int):
+
+        p_range = np.linspace(0, 1, cycles + 2)
+
+        for i in range(cycles):
+            print("Heat up cycle %d " % (i + 1))
+            self._beta = self._heat_up(p_range[cycles - i])
+            print("Current p %f" % p_range[cycles - i])
+            print("Beta : %f " % self._beta)
+            print("Objective init %f " % self.S.get_objective())
+            self.cool_down(iters)
+            print("Objective final %f " % self.S.get_objective())
 
     def cool_down(self, iters: int) -> None:  # TODO
         """
