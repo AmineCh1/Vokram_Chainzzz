@@ -83,9 +83,11 @@ class Solution(object):
         if self._center is not None:
             a.ax.add_artist(plt.Circle(tuple(self._center), self._radius, color='black', fill=False))
             a.ax.add_artist(
-                plt.Circle(self._dataset.x[self._order[self._c_i]], 2 * self._radius, color='grey', linestyle='--', fill=False))
+                plt.Circle(self._dataset.x[self._order[self._c_i]], 2 * self._radius, color='grey', linestyle='--',
+                           fill=False))
             a.ax.add_artist(
-                plt.Circle(self._dataset.x[self._order[self._c_j]], 2 * self._radius, color='grey', linestyle='--', fill=False))
+                plt.Circle(self._dataset.x[self._order[self._c_j]], 2 * self._radius, color='grey', linestyle='--',
+                           fill=False))
         plt.title("s = " + str(np.round(self._objective_v, 2)) + " ; r = " + str(np.round(self._radius, 2)))
         # plt.savefig('obj3_g2.png')
         plt.show()
@@ -113,6 +115,7 @@ class SimulatedAnnealing(object):
         self._beta = 0
         self.betas = []
         self._best_obj = self.S.get_objective()
+        self.best_S = copy.deepcopy(self.S)
         self._alpha = alpha
         self.card_list = [np.sum(self.S._assignments)]
         # print(self._beta)
@@ -165,6 +168,7 @@ class SimulatedAnnealing(object):
                 current_objective = self.S.get_objective()
                 if current_objective > self._best_obj:
                     self._best_obj = current_objective
+                    self.best_S = copy.deepcopy(self.S)
             self.objectives.append(self.S.get_objective())
             self.card_list.append(np.sum(self.S._assignments))
         if logging:

@@ -68,7 +68,7 @@ class Solution(object):
             self.update()
 
     def get_objective(self) -> float:
-        return self._objective_v - self._lmbd * self._dataset.N * np.pi * np. power(self._radius, 2)
+        return self._objective_v - self._lmbd * self._dataset.N * np.pi * np.power(self._radius, 2)
 
     def get_profit(self) -> float:
         """
@@ -100,7 +100,7 @@ class Solution(object):
     def index_mean(self, i: int, j: int) -> np.ndarray:
         return helpers.mean(self._dataset.x[i], self._dataset.x[j])
 
-    #return the matrix of distances between all cities (unused)
+    # return the matrix of distances between all cities (unused)
     """
     def index_assigned_distances(self, assigned):
         assigned_points = self._dataset.x[assigned]
@@ -119,6 +119,7 @@ class SimulatedAnnealing(object):
         self._beta = 0
         self.betas = []
         self._best_obj = self.S.get_objective()
+        self.best_S = copy.deepcopy(self.S)
         self._alpha = alpha
         self.card_list = [np.sum(self.S._assignments)]
         # print(self._beta)
@@ -163,7 +164,7 @@ class SimulatedAnnealing(object):
         self.betas.append(np.log(p) / (mean_ - old_obj))
         return np.max((self._beta / self._alpha, np.log(p) / (mean_ - old_obj)))
 
-    def cool_down(self, iters: int, logging : bool = False) -> None:  # TODO
+    def cool_down(self, iters: int, logging: bool = False) -> None:  # TODO
         for _ in tqdm(range(iters)):
             old_objective = self.S.get_objective()
             move = np.random.randint(self._dataset.N)
@@ -174,6 +175,7 @@ class SimulatedAnnealing(object):
                 current_objective = self.S.get_objective()
                 if current_objective > self._best_obj:
                     self._best_obj = current_objective
+                    self.best_S = copy.deepcopy(self.S)
             self.objectives.append(self.S.get_objective())
             self.card_list.append(np.sum(self.S._assignments))
         if logging:
@@ -185,4 +187,3 @@ class SimulatedAnnealing(object):
         """
         plt.plot(range(len(self.betas)), self.betas)
         plt.show()
-        
