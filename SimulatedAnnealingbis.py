@@ -91,6 +91,7 @@ class Solution(object):
             a.ax.add_artist(
                 plt.Circle(self._dataset.x[self._c_j], 2 * self._radius, color='grey', linestyle='--', fill=False))
         plt.title("s = " + str(np.round(self._objective_v, 2)) + " ; r = " + str(np.round(self._radius, 2)))
+        # plt.savefig('obj2_g2.png')
         plt.show()
 
     def index_distance(self, i: int, j: int) -> float:
@@ -119,6 +120,7 @@ class SimulatedAnnealing(object):
         self.betas = []
         self._best_obj = self.S.get_objective()
         self._alpha = alpha
+        self.card_list = [np.sum(self.S._assignments)]
         # print(self._beta)
 
     def _initial_solution(self) -> Solution:
@@ -134,13 +136,13 @@ class SimulatedAnnealing(object):
         """
         p_range = np.linspace(0, 1, cycles + 2)
         for i in range(cycles):
-            print("Heat up cycle %d " % (i + 1))
+            # print("Heat up cycle %d " % (i + 1))
             self._beta = self._heat_up(p_range[cycles - i])
-            print("Current p %f" % p_range[cycles - i])
+            # print("Current p %f" % p_range[cycles - i])
             print("Beta : %f " % self._beta)
-            print("Objective init %f " % self.S.get_objective())
+            # print("Objective init %f " % self.S.get_objective())
             self.cool_down(iters)
-            print("Objective final %f " % self.S.get_objective())
+            # print("Objective final %f " % self.S.get_objective())
 
     def _heat_up(self, p: float) -> float:
         old_obj = self._best_obj
@@ -173,6 +175,7 @@ class SimulatedAnnealing(object):
                 if current_objective > self._best_obj:
                     self._best_obj = current_objective
             self.objectives.append(self.S.get_objective())
+            self.card_list.append(np.sum(self.S._assignments))
         if logging:
             self.S.plot()
 

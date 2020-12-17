@@ -108,6 +108,7 @@ class Solution(object):
             a.ax.add_artist(
                 plt.Circle(self._dataset.x[self._c_j], 2 * self._radius, color='grey', linestyle='--', fill=False))
         plt.title("s = " + str(np.round(self._objective_v, 2)) + " ; r = " + str(np.round(self._radius, 2)))
+        # plt.savefig('obj1_g2.png')
         plt.show()
 
 
@@ -146,6 +147,8 @@ class SimulatedAnnealing(object):
         #beta parameter of the Metropolis-Hastings algorithm
         self._beta = 0
 
+        self.card_list = [np.sum(self.S.assignments)]
+
 
     def _initial_solution(self) -> Solution:
         """
@@ -179,13 +182,13 @@ class SimulatedAnnealing(object):
         p_range = np.linspace(0, 1, cycles + 2)
 
         for i in range(cycles):
-            print("Heat up cycle %d " % (i + 1))
+            # print("Heat up cycle %d " % (i + 1))
             self._beta = self._heat_up(p_range[cycles - i])
-            print("Current p %f" % p_range[cycles - i])
-            print("Beta : %f " % self._beta)
-            print("Objective init %f " % self.S.get_objective())
+            # print("Current p %f" % p_range[cycles - i])
+            # print("Beta : %f " % self._beta)
+            # print("Objective init %f " % self.S.get_objective())
             self.cool_down(iters)
-            print("Objective final %f " % self.S.get_objective())
+            # print("Objective final %f " % self.S.get_objective())
 
     def cool_down(self, iters: int, logging: bool = False) -> None:  # TODO
         """
@@ -198,5 +201,7 @@ class SimulatedAnnealing(object):
             if np.random.rand() > np.exp(self._beta * (self.S.get_objective() - old_objective)):
                 self.S.incremental_objective_function(move)
             self.objectives.append(self.S.get_objective())
+            self.card_list.append(np.sum(self.S.assignments))
         if logging:
             self.S.plot()
+
